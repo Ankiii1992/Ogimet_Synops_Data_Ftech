@@ -3,7 +3,8 @@ import pandas as pd
 import os
 import gspread
 from io import StringIO
-from datetime import datetime, timedelta
+# Added 'timezone' explicitly to handle reliable UTC lookups
+from datetime import datetime, timedelta, timezone
 from oauth2client.service_account import ServiceAccountCredentials
 
 # --- CONFIGURATION ---
@@ -32,10 +33,43 @@ STATIONS = {
 
 def get_station_data(station_id, station_name):
     print(f"-> Accessing Ogimet for {station_name}...")
-    url = f"https://www.ogimet.com/cgi-bin/gsynres?lang=en&ind={station_id}&ndays=2&decoded=yes"
+    
+    # 1. Capture the exact live UTC time
+    now_utc = datetime.now(timezone.utc)
+    
+    # 2. Time-rounding Logic: If minutes are >= 30, bump up to the next hour.
+    # Using timedelta ensures days, months, and years roll over smoothly if near midnight.
+    if now_utc.minute >= 30:
+        rounded_utc = now_utc + timedelta(hours=1)
+        synop_hour = rounded_utc.hour
+        synop_year = rounded_utc.year
+        synop_month = rounded_utc.month
+        synop_day = rounded_utc.day
+    else:
+        synop_hour = now_utc.hour
+        synop_year = now_utc.year
+        synop_month = now_utc.month
+        synop_day = now_utc.day
+    
+    # 3. Dynamic URL generation using the computed parameters to bypass server caching
+    url = (
+        f"https://www.ogimet.com/cgi-bin/gsynres?lang=en"
+        f"&ind={station_id}"
+        f"&ano={synop_year}"
+        f"&mes={synop_month:02d}"
+        f"&day={synop_day:02d}"
+        f"&hora={synop_hour:02d}"
+        f"&ndays=2"
+        f"&decoded=yes"
+    )
     
     try:
-        headers = {'User-Agent': 'Mozilla/5.0'}
+        # Added explicit Cache-Control headers to block server-side proxy caching
+        headers = {
+            'User-Agent': 'Mozilla/5.0',
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+        }
         response = requests.get(url, headers=headers, timeout=20)
         
         tables = pd.read_html(StringIO(response.text), header=0)
