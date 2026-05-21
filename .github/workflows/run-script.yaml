@@ -36,4 +36,4 @@ jobs:
 
     # Executes your script. (Note the quotes to handle spaces in your filename)
     - name: Execute Weather Sync Script
-      run: python "3 hourly_data fetch_production_test2.py"
+      run: python "3 hourly_data fetch_production.py"
