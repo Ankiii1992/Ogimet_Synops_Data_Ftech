@@ -37,20 +37,11 @@ def get_station_data(station_id, station_name):
     # 1. Capture the exact live UTC time
     now_utc = datetime.now(timezone.utc)
     
-    # 2. Time-rounding Logic: If minutes are >= 30, bump up to the next hour.
-    # Using timedelta ensures days, months, and years roll over smoothly if near midnight.
-    if now_utc.minute >= 30:
-        rounded_utc = now_utc + timedelta(hours=1)
-        synop_hour = rounded_utc.hour
-        synop_year = rounded_utc.year
-        synop_month = rounded_utc.month
-        synop_day = rounded_utc.day
-    else:
-        synop_hour = now_utc.hour
-        synop_year = now_utc.year
-        synop_month = now_utc.month
-        synop_day = now_utc.day
-    
+    #2. Floor to nearest valid SYNOP hour (00, 03, 06, 09, 12, 15, 18, 21)
+    synop_hour = (now_utc.hour // 3) * 3
+    synop_year = now_utc.year
+    synop_month = now_utc.month
+    synop_day = now_utc.day
     # 3. Dynamic URL generation using the computed parameters to bypass server caching
     url = (
         f"https://www.ogimet.com/cgi-bin/gsynres?lang=en"
