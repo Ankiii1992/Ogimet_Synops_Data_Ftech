@@ -39,4 +39,4 @@ jobs:
 
     # Executes your script
     - name: Execute Weather Sync Script
-      run: python "3 hourly_data fetch_production_test2.py"
+      run: python "3 hourly_data fetch_production.py"
