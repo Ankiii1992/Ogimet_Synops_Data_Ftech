@@ -1,4 +1,4 @@
-name: 1.5-Hour Weather Sync Automation
+name: 3 Hour Weather Sync Automation
 
 on:
   schedule:
@@ -6,10 +6,13 @@ on:
     - cron: '35 0,3,6,9,12,15,18,21 * * *'
     
     # Schedule B: Runs at Minute 05 on these UTC hours (Matches 1:35, 4:35, 7:35... IST)
-    - cron: '5 2,5,8,11,14,17,20,23 * * *'
+    #cron: '5 2,5,8,11,14,17,20,23 * * *'
   
-  # Keeps the manual button active so you can test it right now
-  workflow_dispatch: 
+  workflow_dispatch: # Allows manual override testing button
+
+# This clears the deprecation warning by opting into Node 24 early
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
   run-weather-sync:
@@ -34,6 +37,6 @@ jobs:
       run: |
         echo '${{ secrets.GCP_KEY }}' > service_account.json
 
-    # Executes your script. (Note the quotes to handle spaces in your filename)
+    # Executes your script
     - name: Execute Weather Sync Script
-      run: python "3 hourly_data fetch_production.py"
+      run: python "3 hourly_data fetch_production_test2.py"
